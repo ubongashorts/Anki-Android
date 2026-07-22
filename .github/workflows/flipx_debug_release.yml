@@ -1,0 +1,48 @@
+name: 📦 FlipX Debug Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build_debug_apk:
+    name: 'Build unsigned debug APK'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        name: Gradle Cache
+        with:
+          path: ~/.gradle/caches
+          key: gradle-${{ hashFiles('**/*.gradle*') }}-v1
+
+      - name: Configure JDK
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: "jetbrains"
+          java-version: "21"
+
+      - name: Assemble debug APK
+        run: ./gradlew :AnkiDroid:assembleDebug
+        shell: bash
+
+      - name: Locate APK
+        id: find_apk
+        run: |
+          APK_PATH=$(find AnkiDroid/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Create release
+        run: |
+          TAG="flipx-debug-$(date +%Y%m%d%H%M%S)"
+          gh release create "$TAG" "${{ steps.find_apk.outputs.apk_path }}" \
+            --title "FlipX debug build" \
+            --notes "Unsigned debug build with HOME category added for flipx compatibility. Not signed for Play Store; sideload only."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
