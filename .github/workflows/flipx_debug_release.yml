@@ -27,13 +27,13 @@ jobs:
           java-version: "21"
 
       - name: Assemble debug APK
-        run: ./gradlew :AnkiDroid:assembleDebug
+        run: ./gradlew :AnkiDroid:assembleFullDebug
         shell: bash
 
       - name: Locate APK
         id: find_apk
         run: |
-          APK_PATH=$(find AnkiDroid/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          APK_PATH=$(find AnkiDroid/build/outputs/apk/full/debug -name "*.apk" | head -n 1)
           echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
         shell: bash
 
